@@ -1,9 +1,10 @@
 # 手機、平板也可以用的客家話拼音輸入法—利用RIME 框架系統
 
-Last Tuesday 
+2020/02/11 
 
 ![readme_aux/IMG_4340_scaled.png](readme_aux/IMG_4340_scaled.png)
 
+[排版較佳的網頁在這](https://www.notion.so/RIME-ce101f24bb084f34911c58ee081adffc)
 - 特色：
     - 手機、平板也可以用的客家話輸入法。
     - 用國語注音、國語拼音輸入客家話文字，我們的大腦必須從客家話發音 → 漢字 → 國語發音 → 注音、拼音符號輸入 → 選字等這幾個步驟拆解。而客家話拼音輸入法，則可以縮短成客家話發音 → 拼音符號輸入 → 選字等步驟，幾乎省 50% 的腦力。
@@ -29,7 +30,7 @@ Last Tuesday
 
     例如，想要海陸腔、教育部拼音、安卓手機上使用，則要選擇下載 k_hl_g_m.schema.yaml、 k_hl.dict.yaml 這兩個檔案，以及 trime.custom.yaml 設定檔。
 
-    Git Hub 下載點……。
+    [Git Hub 下載點](https://github.com/nienpoch/hakka_rime)
 
     不管是否是要在行動裝置上安裝，還是在桌機、筆電上安裝，這些規畫檔、字典檔都要先透過電腦、筆電下載。暫時先存放在一個專屬的資料夾裏，資料夾名稱簡單英文就好。例如，在「下載」(download) 資料夾裏新增一個子資料夾，名叫「ktmp」。
 
