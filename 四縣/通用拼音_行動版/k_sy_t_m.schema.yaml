@@ -1,0 +1,325 @@
+# Rime schema
+# encoding: utf-8
+
+schema:
+  author:
+    - "陳念波 <nienpo@yahoo.com>"
+  description: |
+    「客家話通用拼音」，平時不需要聲調，但是可以配上輸入聲調縮小後選字範圍
+     6 (與注音符號的二聲同鍵) 是低昇調
+     4 (與注音符號的四聲同鍵) 是高降調
+     - 是低平調
+     7 (與注音符號的輕聲同鍵) 是低入調
+     = 是中平調 (海陸腔)(與 + 號同鍵)
+    schema整體架構修改自 Terra_pinyin (地球拼音)
+    拼音碼表根據徐兆泉老師編纂的《臺灣四縣腔海陸腔客家話辭典》ISBN 9879576387159
+    由編者徐兆泉老師提供的同音字檢索資料製作
+    本 schema 適用於「客語・四縣腔・通用拼音」，在行動裝置上使用 (iRime)
+    
+  name: "客·四縣·通·行動"
+  schema_id: k_sy_t_m
+  version: 2
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: ["中文", "西文"]
+  - name: full_shape
+    states: ["半角", "全角"]
+  - name: simplification
+    states: ["漢字", "汉字"]
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - r10n_translator
+    - reverse_lookup_translator
+  filters:
+    - simplifier
+    - uniquifier
+
+speller:
+  algebra:                  # dict --> speller algebra --> establish effective spelling
+    - xform/55/A/           # 高平調，暫時用代碼 A; 例, seu55 (笑) --> seuA
+    - xform/53/B/           # (海陸腔) 高降調，暫時用代碼 B; 例, sii53 (獅) --> siiB
+    - xform/33/C/           # (海陸腔) 中平調，暫時用代碼 C; 例, siong33 (象) --> siongC
+    - xform/31/D/           # (四縣腔) 高降調，暫時用代碼 D; 例, seu31 (小) --> seuD
+    - xform/24/E/           # 低昇調，暫時用代碼 E; 例, seu24 (搜) --> seuE
+    - xform/11/F/           # 低平調，暫時用代碼 F; 例, seu11 (愁) --> seuF
+    - xform/5/G/            # 高入調，暫時用代碼 G; 例, fat5 (罰) --> fatG
+    - xform/2/H/            # 低入調，暫時用代碼 H; 例, fat2 (發) --> fatH
+    - derive/^([a-z]+)[A-Z]$/$1/    # 各種調號的，添加無調號版本
+    - "xlit/ABCDEFGH/14=46-17/"     # 改成輸入時的調號
+#    - derive/`/4/           # 高降調符號也可用注音符號的四聲 (與 4 同鍵)
+#    - derive/'/6/           # 低昇調符號也可用注音符號的二聲 (與 6 同鍵)
+#    - derive/\./7/          # 低入調符號也可用注音符號的輕聲 (與 7 同鍵)
+#    - derive/!/1/           # 高平調、高入調以 ! 為組字符號 (與 1 同鍵)
+    - abbrev/^([a-z]).+$/$1/       # 以首字母爲多字母音節碼的縮寫 (一般字)
+    - abbrev/^([zcsr]h).+$/$1/     # 以首字母 zh, ch, sh, rh 爲多字母音節碼的縮寫
+    - abbrev/^(ng).+$/$1/          # 以首字母 ng 爲多字母音節碼的縮寫
+    - abbrev/^(ai).+$/$1/          # 以韻母 ai 起頭的字的縮寫
+    - abbrev/^(au).+$/$1/          # 以韻母 au 起頭的字的縮寫
+    - abbrev/^(eu).+$/$1/          # 以韻母 eu 起頭的字的縮寫
+  alphabet: "zyvutsrponmlkihgfedcba1467=-"  
+  initials: zyvtsrponmlkihgfedcba
+  finals: "1467=-"     
+#  delimiter: " '"
+#  use_space: true         # 空格屬拼音調號 (高平調) 的一部分，所以要設成 true
+
+
+menu:
+  alternative_select_keys: "ABCDEFGHIJ"   # 因為阿拉伯數字 4 6 7 用來當拼音調號，所以改用大寫字母選字
+
+translator:
+  dictionary: k_sy
+  prism: k_sy_t_m
+#  enable_completion: false
+  preedit_format:
+# 輸入碼呈現方式
+# 拼音寫法 pín yím sià fap.   
+    - xform ([aeiou])([ngkptm]+)([467=-])$ $1$3$2   # (母音/複合母音) + (可有可無的子音 n g k p t) + (調號) --> 調號一定移到最右邊的母音的旁邊
+    - xform ([aeou])([iuo])([467=-]) $1$3$2         # 接力：如果是 (複合母音): a'i, a'u, e'u, o'i, u'i; 而 ia', ie', io', iu', ua'不變動
+    - xform (i)(i)([467=-]) $1$3$2                 # 如果是 ii 母音，則調號移到第一個 i 旁
+    - xform/^([a-z]+)1$/$1/          # 高平調、高入調用 ! 或 1 鍵組字時，輸入區要把他們吃掉不顯示
+    - xform/a[6']/á/
+    - xform/a-/a̠/
+    - xform/a[4`]/à/
+    - xform/a=/ā/
+    - xform/a[7\.]/ạ/
+    - xform/e[6']/é/
+    - xform/e-/e̠/
+    - xform/e[4`]/è/
+    - xform/e=/ē/
+    - xform/e[7\.]/ẹ/
+    - xform/o[6']/ó/
+    - xform/o-/o̠/
+    - xform/o[4`]/ò/
+    - xform/o=/ō/
+    - xform/o[7\.]/ọ/
+    - xform/u[6']/ú/
+    - xform/u-/u̠/
+    - xform/u[4`]/ù/
+    - xform/u=/ū/
+    - xform/u[7\.]/ụ/
+    - xform/i[6']/í/
+    - xform/i-/i̠/
+    - xform/i[4`]/ì/
+    - xform/i=/ī/
+    - xform/i[7\.]/ị/
+    - xform/m[6']/ḿ/                # 沒有母音，只有單一 m；調號一定在旁，前面的移動指令無法影響
+    - xform/m-/m̠/
+    - xform/m[4`]/m̀/
+    - xform/m=/m̄/
+    - xform/m[7\.]/ṃ/
+    - xform/n[6']/ń/                 # 沒有母音，只有單一 n；調號一定在旁，前面的移動指令無法影響
+    - xform/n-/ṉ/
+    - xform/n[4`]/ǹ/
+    - xform/n=/n̄/
+    - xform/n[7\.]/ṇ/
+    - xform/nn/ⁿ/
+    - xform/ng[6']/ńg/	# 沒有母音，只有單一 ng；調號一定在旁，前面的移動指令無法影響 [added on 2015.03.26]
+    - xform/ng-/ṉg/
+    - xform/ng[4`]/ǹg/
+
+
+
+punctuator:
+#  import_preset: symbols
+  full_shape:
+    ' ' : { commit: '　' }
+    ',' : { commit: ， }
+    '.' : { commit: 。 }
+    '<' : [ 《, 〈, «, ‹ ]
+    '>' : [ 》, 〉, », › ]
+    '/' : [ ／, ÷ ]
+    '?' : { commit: ？ }
+    ';' : { commit: ； }
+    ':' : { commit: ： }
+    '''' : { pair: [ '‘', '’' ] }
+    '"' : { pair: [ '“', '”' ] }
+    '\' : [ 、, ＼ ]
+    '|' : [ ・, ｜, '§', '¦' ]
+    '`' : ｀
+    '~' : [ 〜, ～, 〰 ]
+    '!' : { commit: ！ }
+    '@' : [ ＠, ☯ ]
+    '#' : [ ＃, ⌘ ]
+    '%' : [ ％, '°', '℃' ]
+    '$' : [ ￥, '$', '€', '£', '¥', '¢', '¤' ]
+    '^' : { commit: …… }
+    '&' : ＆
+    '*' : [ ＊, ・, ·, ×, ※, ❂ ]
+    '(' : （
+    ')' : ）
+    '-' : －
+    '_' : ——
+    '+' : ＋
+    '=' : ＝
+    '[' : [ 「, 【, 〔, ［ ]
+    ']' : [ 」, 】, 〕, ］ ]
+    '{' : [ 『, 〖, ｛ ]
+    '}' : [ 』, 〗, ｝ ]
+  half_shape:
+    ',' : { commit: ， }
+    '.' : { commit: 。 }
+    '<' : [ 《, 〈, «, ‹ ]
+    '>' : [ 》, 〉, », › ]
+    '/' : [ 、, '/', ／, ÷ ]
+    '?' : { commit: ？ }
+    ';' : { commit: ； }
+    ':' : { commit: ： }
+#    '''' : { pair: [ '‘', '’' ] }
+    '"' : { pair: [ '“', '”' ] }
+    '\' : [ 、, '\', ＼ ]
+    '|' : [ ・, '|', ｜, '§', '¦' ]
+#    '`' : '`'
+    '~' : [ '~', 〜, ～, 〰 ]
+    '!' : { commit: ！ }
+#    '!' : '!'
+    '@' : '@'
+    '#' : '#'
+    '%' : [ '%', ％, '°', '℃' ]
+    '$' : [ ￥, '$', '€', '£', '¥', '¢', '¤' ]
+    '^' : { commit: …… }
+    '&' : '&'
+    '*' : [ '*', ＊, ・, ·, ×, ※, ❂ ]
+#    '(' : （
+#    ')' : ）
+#    '-' : '-'
+    '_' : ——
+    '+' : '+'
+#    '=' : '='
+    '[' : [ 「, 【, 〔, ［ ]
+    ']' : [ 」, 】, 〕,  ］ ]
+    '{' : [ 『, 〖, ｛ ]
+    '}' : [ 』, 〗, ｝ ]
+    "(": {commit: "("}
+    ")": {commit: ")"}
+
+
+
+key_binder:
+  bindings:
+    - {accept: minus, send: minus, when: has_menu}
+    - {accept: equal, send: equal, when: has_menu}
+    - {accept: comma, send: comma, when: has_menu}
+    - {accept: period, send: period, when: has_menu}
+    - {accept: Up, send: Page_Up, when: has_menu}
+    - {accept: Down, send: Page_Down, when: has_menu}
+  import_preset: default
+
+editor:
+  bindings:
+    Return: commit_script_text
+
+recognizer:
+#  import_preset: default
+  patterns:
+    email: "^[a-z][-_.0-9a-z]*@.*$"
+    reverse_lookup: "^`[a-z]*'?$"
+    uppercase: "^[A-Z][-_+.'0-9A-Za-z]*$"
+    url: "^(www[.]|https?:|ftp:|mailto:).*$"
+    
+reverse_lookup:
+  preedit_format:
+    - "xform/e?r5$/er5/"
+    - "xform/iu/iou/"
+    - "xform/ui/uei/"
+    - "xform/ong/ung/"
+    - "xform/yi?/i/"
+    - "xform/wu?/u/"
+    - "xform/iu/v/"
+    - "xform/([jqx])u/$1v/"
+    - "xform/([iuv])n/$1en/"
+    - "xform/zh/Z/"
+    - "xform/ch/C/"
+    - "xform/sh/S/"
+    - "xform/ai/A/"
+    - "xform/ei/I/"
+    - "xform/ao/O/"
+    - "xform/ou/U/"
+    - "xform/ang/K/"
+    - "xform/eng/G/"
+    - "xform/an/M/"
+    - "xform/en/N/"
+    - "xform/er/R/"
+    - "xform/eh/E/"
+    - "xform/([iv])e/$1E/"
+    - "xform/1//"
+    - "xlit|bpmfdtnlgkhjqxZCSrzcsiuvaoeEAIOUMNKGR2345|ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦˊˇˋ˙|"
+
+  # 一個字反查時，如果有多個發音，在這裏是一口氣處理以空格分隔的各個拼音，不要以 ^ $ 字串首尾指令介入，
+  # 也不要用空格當成高平調、高入調的符號。用原本 ABCDEFGH 代碼很合適
+  comment_format:
+    - xform/55/A/           # 高平調，暫時用代碼 A; 例, seu55 (笑) --> seuA
+    - xform/53/B/           # (海陸腔) 高降調，暫時用代碼 B; 例, sii53 (獅) --> siiB
+    - xform/33/C/           # (海陸腔) 中平調，暫時用代碼 C; 例, siong33 (象) --> siongC
+    - xform/31/D/           # (四縣腔) 高降調，暫時用代碼 D; 例, seu31 (小) --> seuD
+    - xform/24/E/           # 低昇調，暫時用代碼 E; 例, seu24 (搜) --> seuE
+    - xform/11/F/           # 低平調，暫時用代碼 F; 例, seu11 (愁) --> seuF
+    - xform/5/G/            # 高入調，暫時用代碼 G; 例, fat5 (罰) --> fatG
+    - xform/2/H/            # 低入調，暫時用代碼 H; 例, fat2 (發) --> fatH
+    - xform/([aeiou])([ngkptm]+)([BCDEFH])/$1$3$2   # (母音/複合母音) + (子音 n g k p t) + (調號) --> 調號一定移到最右邊的母音的旁邊
+    - xform/([aeou])([iuo])([BCDEFH])/$1$3$2         # 接力：如果是 (複合母音): a'i, a'u, e'u, o'i, u'i; 而 ia', ie', io', iu', ua'不變動
+    - xform/(i)(i)([BCDEFH])/$1$3$2                 # 如果是 ii 母音，則調號移到第一個 i 旁
+    - xform/([a-z]+)([AG])/$1/          # 高平調、高入調無調號，不必顯示
+    - xform/aE/á/
+    - xform/aF/a̠/
+    - xform/a[BD]/à/
+    - xform/aC/ā/
+    - xform/aH/ạ/
+    - xform/eE/é/
+    - xform/eF/e̠/
+    - xform/e[BD]/è/
+    - xform/eC/ē/
+    - xform/eH/ẹ/
+    - xform/oE/ó/
+    - xform/oF/o̠/
+    - xform/o[BD]/ò/
+    - xform/oC/ō/
+    - xform/oH/ọ/
+    - xform/uE/ú/
+    - xform/uF/u̠/
+    - xform/u[BD]/ù/
+    - xform/uC/ū/
+    - xform/uH/ụ/
+    - xform/iE/í/
+    - xform/iF/i̠/
+    - xform/i[BD]/ì/
+    - xform/iC/ī/
+    - xform/iH/ị/
+    - xform/mE/ḿ/                # 沒有母音，只有單一 m；調號一定在旁，前面的移動指令無法影響
+    - xform/mF/m̠/
+    - xform/m[BD]/m̀/
+    - xform/mC/m̄/
+    - xform/mH/ṃ/
+    - xform/nE/ń/                 # 沒有母音，只有單一 n；調號一定在旁，前面的移動指令無法影響
+    - xform/nF/ṉ/
+    - xform/n[BD]/ǹ/
+    - xform/nC/n̄/
+    - xform/nH/ṇ/
+    - xform/nn/ⁿ/
+    - xform/ngE/ńg/		# 沒有母音，只有單一 ng；調號一定在旁，前面的移動指令無法影響 [added on 2015.03.26]
+    - xform/ngF/ṉg/
+    - xform/ng[BD]/ǹg/
+  dictionary: luna_pinyin
+  enable_completion: true
+  prefix: "`"
+  suffix: "'"
+  tips: "〔國語拼音〕"
+
