@@ -31,6 +31,7 @@
     例如，想要海陸腔、教育部拼音、安卓手機上使用，則要選擇下載 k_hl_g_m.schema.yaml、 k_hl.dict.yaml 這兩個檔案，以及 trime.custom.yaml 設定檔。
 
     [Git Hub 下載點](https://github.com/nienpoch/hakka_rime)
+    點選「schema_and_dict_files.zip」, 然後在它的專屬頁面選擇「download」(下載)。
 
     不管是否是要在行動裝置上安裝，還是在桌機、筆電上安裝，這些規畫檔、字典檔都要先透過電腦、筆電下載。暫時先存放在一個專屬的資料夾裏，資料夾名稱簡單英文就好。例如，在「下載」(download) 資料夾裏新增一個子資料夾，名叫「ktmp」。
 
